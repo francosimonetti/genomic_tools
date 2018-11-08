@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats as stats
 
-def normalize_quantiles(M, inplace=False):
+def normalize_quantiles(df):
     """
     Note: replicates behavior of R function normalize.quantiles from library("preprocessCore")  
 
@@ -13,8 +13,8 @@ def normalize_quantiles(M, inplace=False):
     
     Adapted from https://github.com/andrewdyates/quantile_normalize
     """
-    if not inplace:
-        M = M.copy()
+    
+    M = df.values.copy()
     
     Q = M.argsort(axis=0)
     m,n = M.shape
@@ -46,8 +46,7 @@ def normalize_quantiles(M, inplace=False):
                 j -= 1 + dupes[j]
         assert j == -1
     
-    if not inplace:
-        return M
+    return M
         
 
 def inverse_quantile_normalization(M):
@@ -72,7 +71,7 @@ def normalize_expression(expression_df, counts_df, expression_threshold=0.1, cou
     mask = ((np.sum(expression_df>expression_threshold,axis=1)>=min_samples) & (np.sum(counts_df>count_threshold,axis=1)>=min_samples)).values
     
     # apply normalization
-    M = normalize_quantiles(expression_df.loc[mask].values, inplace=False)
+    M = normalize_quantiles(expression_df.loc[mask])
     R = inverse_quantile_normalization(M)
 
     quant_std_df = pd.DataFrame(data=R, columns=donor_ids, index=expression_df.loc[mask].index)    
