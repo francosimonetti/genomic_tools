@@ -66,7 +66,7 @@ if __name__ == '__main__':
     print ("Annotation reading complete")
 
     samples = list()
-    if len(famfile):
+    if famfile != None:
         with open(famfile) as instream:
             samples = [ line.strip() for line in instream ]
 
