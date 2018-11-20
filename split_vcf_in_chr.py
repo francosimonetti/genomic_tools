@@ -38,7 +38,7 @@ def parse_args():
                         type=str,
                         dest='samplefile',
                         metavar='STR',
-                        help='list of samples to keep')
+                        help='optional: list of samples to keep')
 
     opts = parser.parse_args()
     return opts
@@ -62,7 +62,7 @@ if __name__ == '__main__':
         for line in mfile:
             linesplit = line.strip().split()
             varid = linesplit[2]
-            rsidlist[varid] = linesplit[6]
+            rsidlist[varid] = linesplit[5]
     print ("Annotation reading complete")
 
     samples = list()
@@ -121,18 +121,30 @@ if __name__ == '__main__':
                 ref   = linesplit[3]
                 alt   = linesplit[4]
                 QC    = linesplit[6]
+                QC_meta = linesplit[7].split(";")
+                maf = float(QC_meta[0].split("=")[1])
 
                 if prev_chrom == None:
                     prev_chrom = chrom
+                    indels_filter=0
+                    complement_filter=0
+                    pass_filter=0
+                    maf_filter=0
 
                 if opts.filtersnps:
                     # Skip indels
                     if len(ref) > 1 or len(alt) > 1:
+                        indels_filter +=1
                         continue
                     # Skip ambiguous strands
                     if SNP_COMPLEMENT[ref] == alt:
+                        complement_filter +=1
                         continue
                     if QC != "PASS":
+                        pass_filter +=1
+                        continue
+                    if maf < 0.1:
+                        maf_filter +=1
                         continue
 
                 if filter_samples:
@@ -151,16 +163,28 @@ if __name__ == '__main__':
                             outvcf.write(l)
                         for s in snp_lines:
                             outvcf.write(s)
+                    print("Done")
+                    print("{:d} indels deleted".format(indels_filter))
+                    print("{:d} complement snps deleted".format(complement_filter))
+                    print("{:d} SNPs did not pass QC".format(pass_filter))
+                    print("{:d} SNPs with MAF < 0.1".format(maf_filter))
                     snp_lines = list()
                     snp_lines.append(newline.encode('utf-8'))
                     prev_chrom = chrom
-                    print("Done")
+                    indels_filter=0
+                    complement_filter=0
+                    pass_filter=0
+                    maf_filter=0
         print("Processed Chromosome {:d}, writing...".format(int(chrom)), end=" ")
         with gzip.open(outfile.format(int(chrom)), 'wb') as outvcf:
             for l in header_lines:
                 outvcf.write(l)
             for s in snp_lines:
                 outvcf.write(s)
+        print("Done")
+        print("{:d} indels deleted".format(indels_filter))
+        print("{:d} complement snps deleted".format(complement_filter))
+        print("{:d} SNPs did not pass QC".format(pass_filter))
+        print("{:d} SNPs with MAF < 0.1".format(maf_filter))
         snp_lines = list()
         prev_chrom = chrom
-        print("Done")
