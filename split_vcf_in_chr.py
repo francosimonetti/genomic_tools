@@ -65,6 +65,12 @@ if __name__ == '__main__':
             rsidlist[varid] = linesplit[5]
     print ("Annotation reading complete")
 
+    # list of known duplicated RSIDs
+    snps_blacklist = ["rs61573637", "chr2_87000000_D", "rs855274", "chr1_105000000_I", "rs74733400", "chr14_81000000_D"]
+    blacklist = collections.defaultdict(lambda: False)
+    for snp in snps_blacklist:
+        blacklist[snp] = True
+    
     samples = list()
     if famfile != None:
         with open(famfile) as instream:
@@ -145,6 +151,8 @@ if __name__ == '__main__':
                         continue
                     if maf < 0.1:
                         maf_filter +=1
+                        continue
+                    if blacklist[rsid]:
                         continue
 
                 if filter_samples:
