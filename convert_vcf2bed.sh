@@ -1,14 +1,16 @@
 
 PLINK2="$HOME/bin/plink2"
-WORKDIR="/cbscratch/franco/datasets/gtex/genotypes/vcfs_split_wb"
-OUTDIR="$WORKDIR/bed"
+INPUTDIR="/cbscratch/franco/datasets/gtex/genotypes"
+WORKDIR="$INPUTDIR/vcfs_split_wb"
+OUTDIR="$WORKDIR/bed2"
 mkdir -p $OUTDIR
 
 for CHROM in `seq 1 22`; do
 INPUT="$WORKDIR/GTEx_Analysis_20150112_OMNI_2.5M_5M_450Indiv_chr1to22_genot_imput_info04_maf01_HWEp1E6_ConstrVarIDs_chr${CHROM}.vcf.gz"
 OUTPUT="$OUTDIR/GTEx_chr${CHROM}"
-$PLINK2 --vcf ${INPUT} vcf-dosage=DS  --make-bed --out ${OUTPUT} > ${OUTPUT}.log
-
+# VARLIST="${INPUTDIR}/incl_snp_lists/incl_snps_chr${CHROM}.txt"
+echo "$PLINK2 --vcf ${INPUT} dosage=DS --make-bed --out ${OUTPUT} > ${OUTPUT}.log"
+# --extract ${VARLIST}
 done;
 
 ## Other unused options (we did prefiltering ourselves)
