@@ -2,7 +2,8 @@
 #module load intel/mkl/64/2017/2.174
 
 MPYTHON='/home/franco/miniconda3/bin/python'
-INPUTDIR='/data/franco/datasets/geuvadis/genotype/original_genotype'
+# INPUTDIR='/data/franco/datasets/geuvadis/genotype/original_genotype/vcf_b38_custom_uplift'
+INPUTDIR='/data/franco/datasets/geuvadis/genotype/original_genotype/vcf_b37_filtered'
 SRCDIR="${INPUTDIR}"
 OUTDIR="${INPUTDIR}/dosages"
 CONVERT="/data/franco/genomic_tools/convert_vcf_to_dosage.py"
@@ -12,11 +13,16 @@ if [ ! -d $OUTDIR ]; then
 	mkdir $OUTDIR
 fi
 
-for CHRM in `seq 1 21`
+for CHRM in `seq 1 22`
 do
 
-INFILE="${SRCDIR}/GEUVADIS.chr${CHRM}.PH1PH2_465.IMPFRQFILT_BIALLELIC_PH.annotv2.genotypes.vcf.gz"
-OUTFILE="${OUTDIR}/GEUVADIS.chr${CHRM}.PH1PH2_465.IMPFRQFILT_BIALLELIC_PH.annotv2.MAF001.genotypes.dosage.gz"
+INFILE="${SRCDIR}/GEUVADIS.chr${CHRM}.PH1PH2_465.IMPFRQFILT_BIALLELIC_PH.annotv2.genotypes.INDEL_FILTERED.maf001.vcf.gz"
+OUTFILE="${OUTDIR}/GEUVADIS.chr${CHRM}.PH1PH2_465.IMPFRQFILT_BIALLELIC_PH.annotv2.genotypes.INDEL_FILTERED.maf001.dosage.gz"
+
+# INFILE="${SRCDIR}/GEUVADIS.chr${CHRM}.PH1PH2_465.IMPFRQFILT_BIALLELIC_PH.annotv2.genotypes.INDEL_FILTERED.maf001.UPLIFT.b38.sorted.vcf.gz"
+# OUTFILE="${OUTDIR}/GEUVADIS.chr${CHRM}.PH1PH2_465.IMPFRQFILT_BIALLELIC_PH.annotv2.genotypes.INDEL_FILTERED.maf001.UPLIFT.b38.sorted.dosage.gz"
+
+echo "Processing $INFILE"
 
 $MPYTHON $CONVERT --in $INFILE --out $OUTFILE --filter-maf 0.01 &
 
