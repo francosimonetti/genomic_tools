@@ -20,6 +20,7 @@ def parse_args():
     parser.add_argument('--rsid-table',
                         type=str,
                         dest='annotfile',
+                        default=None,
                         metavar='FILE',
                         help='Lookup table file for RSIDs from GTEx')
 
@@ -37,6 +38,7 @@ def parse_args():
     parser.add_argument('--incl-samples',
                         type=str,
                         dest='samplefile',
+                        default=None,
                         metavar='STR',
                         help='optional: list of samples to keep')
 
@@ -49,23 +51,26 @@ if __name__ == '__main__':
     
     opts = parse_args()
 
-    annotfilepath = opts.annotfile
     infile = opts.infile
     famfile = opts.samplefile
     outfile = opts.outprefix + "chr{:d}.vcf.gz"
 
     SNP_COMPLEMENT = {'A':'T', 'C':'G', 'G':'C', 'T':'A'}
 
-    rsidlist = collections.defaultdict(lambda:None)
-    with open(annotfilepath, 'r') as mfile:
-        next(mfile)
-        for line in mfile:
-            linesplit = line.strip().split()
-            varid = linesplit[2]
-            rsidlist[varid] = linesplit[5]
-    print ("Annotation reading complete")
+    use_annot = False
+    if opts.annotfile is not None:
+        use_annot = True
+        annotfilepath = opts.annotfile
+        rsidlist = collections.defaultdict(lambda:None)
+        with open(annotfilepath, 'r') as mfile:
+            next(mfile)
+            for line in mfile:
+                linesplit = line.strip().split()
+                varid = linesplit[2]
+                rsidlist[varid] = linesplit[5]
+        print ("Annotation reading complete")
 
-    # list of known duplicated RSIDs
+    # list of known duplicated RSIDs in GTEx (dbSNP140?)
     snps_blacklist = ["rs61573637", "chr2_87000000_D", "rs855274", "chr1_105000000_I", "rs74733400", "chr14_81000000_D"]
     blacklist = collections.defaultdict(lambda: False)
     for snp in snps_blacklist:
@@ -119,16 +124,20 @@ if __name__ == '__main__':
                 pos   = int(linesplit[1])
                 varid = linesplit[2]
                 
-                # Convert ids to dbSNP142
-                rsid  = rsidlist[varid]
-                if rsid == None:
-                    print("Skipped variant")
-                    continue
                 ref   = linesplit[3]
                 alt   = linesplit[4]
                 QC    = linesplit[6]
                 QC_meta = linesplit[7].split(";")
                 maf = float(QC_meta[0].split("=")[1])
+
+                # Convert ids to dbSNP
+                if use_annot:
+                    rsid  = rsidlist[varid]
+                    if rsid == None:
+                        print("Skipped variant")
+                        continue
+                else:
+                    rsid = "_".join([chrom, pos, ref, alt])
 
                 if prev_chrom == None:
                     prev_chrom = chrom
@@ -149,7 +158,7 @@ if __name__ == '__main__':
                     if QC != "PASS":
                         pass_filter +=1
                         continue
-                    if maf < 0.1:
+                    if maf < 0.01:
                         maf_filter +=1
                         continue
                     if blacklist[rsid]:
